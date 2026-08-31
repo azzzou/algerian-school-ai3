@@ -1,0 +1,10 @@
+Starting Laravel development server: http://0.0.0.0:8000
+[Fri Aug 28 17:25:47 2026] PHP 8.2.33 Development Server (http://0.0.0.0:8000) started
+[Fri Aug 28 17:25:54 2026] 127.0.0.1:60486 Accepted
+[Fri Aug 28 17:25:54 2026] 127.0.0.1:60486 Closing
+[Fri Aug 28 17:25:54 2026] 127.0.0.1:60487 Accepted
+[Fri Aug 28 17:25:57 2026] 127.0.0.1:60487 Closing
+[Fri Aug 28 17:28:01 2026] 127.0.0.1:60507 Accepted
+[Fri Aug 28 17:28:01 2026] 127.0.0.1:60507 Closing
+[Fri Aug 28 17:28:01 2026] 127.0.0.1:60508 Accepted
+[Fri Aug 28 17:28:02 2026] 127.0.0.1:60508 Closing
