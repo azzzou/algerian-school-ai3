@@ -1,4 +1,5 @@
 
+
 FROM php:8.2-apache
 
 # تثبيت الحزم المطلوبة وأداة فك الضغط ونظام Git
@@ -26,18 +27,27 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط المشروع الحقيقي وتفادي مشاكل الاستبدال
+# فك ضغط المشروع وتفادي مشاكل الاستبدال
 RUN if [ -f composer.zip ]; then \
         unzip -o -q composer.zip -d /var/www/html/ && \
         rm composer.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
-# تثبيت حزم لارافيل تلقائياً عبر Composer
+# السحر هنا: التأكد من وجود ملف .env وإنشاؤه تلقائياً إذا لم يكن موجوداً بالرابط الصحيح
+RUN if [ ! -f .env ]; then \
+        cp .env.example .env || echo "APP_NAME=Laravel" > .env; \
+    fi \
+    && sed -i 's|APP_URL=.*|APP_URL=https://algerian-school-ai3-2.onrender.com|g' .env \
+    && sed -i 's|APP_ENV=.*|APP_ENV=production|g' .env \
+    && sed -i 's|APP_DEBUG=.*|APP_DEBUG=true|g' .env
+
+# تثبيت حزم لارافيل عبر Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# تنظيف وتحديث كاش لارافيل لضمان ظهور التنسيقات والصفحات
-RUN php artisan config:clear \
+# توليد مفتاح التطبيق وتنظيف الكاش لضمان عمل كل الروابط والأيقونات
+RUN php artisan key:generate --force \
+    && php artisan config:clear \
     && php artisan cache:clear \
     && php artisan view:clear
 
@@ -47,7 +57,7 @@ RUN mkdir -p storage bootstrap/cache public \
     && chmod -R 777 storage bootstrap/cache \
     && a2enmod rewrite
 
-# توجيه الأباتشي إلى مجلد public الخاص بلارافيل
+# توجيه الأباتشي إلى مجلد public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
