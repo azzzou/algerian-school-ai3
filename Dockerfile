@@ -25,14 +25,14 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط ملف azzou1.zip تلقائياً
-RUN if [ -f azzou1.zip ]; then \
-        unzip -o -q azzou1.zip -d /var/www/html/ && \
-        rm azzou1.zip; \
+# فك ضغط ملف azzou2.zip تلقائياً
+RUN if [ -f azzou2.zip ]; then \
+        unzip -o -q azzou2.zip -d /var/www/html/ && \
+        rm azzou2.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
-# التأكد من وجود ملف .env وإنشاؤه تلقائياً
+# التأكد من وجود ملف .env وضبط إعدادات البيئة
 RUN if [ ! -f .env ]; then \
         cp .env.example .env || echo "APP_NAME=Laravel" > .env; \
     fi \
