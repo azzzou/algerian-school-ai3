@@ -22,20 +22,26 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ ملفات المشروع
+# نسخ ملفات المشروع بالكامل
 COPY . /var/www/html/
 
-# إنشاء المجلدات الأساسية لكي لا يحدث أي خطأ أبداً
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
+# إنشاء المجلدات وإعطائها صلاحيات كاملة لمنع ظهور 403
+RUN mkdir -p storage bootstrap/cache public \
+    && chmod -R 777 /var/www/html
 
-# ضبط الصلاحيات وتفعيل الـ rewrite
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
-    && a2enmod rewrite
+# تفعيل الـ rewrite
+RUN a2enmod rewrite
 
-# توجيه مسار الأباتشي إلى مجلد public
+# توجيه مسار الأباتشي إلى مجلد public وضبط الإعدادات السماحية
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# السماح للوصول للمجلدات
+RUN echo '<Directory /var/www/html/public/>\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' >> /etc/apache2/apache2.conf
 
 EXPOSE 80
