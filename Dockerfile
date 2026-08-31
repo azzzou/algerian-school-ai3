@@ -22,12 +22,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ جميع الملفات (بما فيها composer.zip)
+# نسخ جميع الملفات
 COPY . /var/www/html/
 
-# السحر هنا: فك ضغط composer.zip تلقائياً وترتيب الملفات
+# السحر هنا: -o لفك الضغط والموافقة التلقائية على الاستبدال
 RUN if [ -f composer.zip ]; then \
-        unzip -q composer.zip -d /var/www/html/ && \
+        unzip -o -q composer.zip -d /var/www/html/ && \
         rm composer.zip; \
     fi
 
