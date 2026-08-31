@@ -27,13 +27,10 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط أي ملف مضغوط موجود في الجذر تلقائياً
-RUN if [ -f .zip ]; then \
-        unzip -o -q .zip -d /var/www/html/ && \
-        rm .zip; \
-    elif [ -f composer.zip ]; then \
-        unzip -o -q composer.zip -d /var/www/html/ && \
-        rm composer.zip; \
+# فك ضغط ملف azzou.zip تلقائياً
+RUN if [ -f azzou.zip ]; then \
+        unzip -o -q azzou.zip -d /var/www/html/ && \
+        rm azzou.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
@@ -56,7 +53,7 @@ RUN php artisan key:generate --force \
     && php artisan view:clear \
     && php artisan route:clear
 
-# إنشاء مجلدات التخزين والجلسات بالكامل وإعطاء الصلاحيات المطلقة لمنع خطأ 419
+# إنشاء مجلدات التخزين والجلسات وإعطاء الصلاحيات المطلقة لمنع خطأ 419
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache public \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 777 storage bootstrap/cache \
