@@ -27,7 +27,7 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط أي ملف مضغوط موجود في الجذر تلقائياً (سواء كان .zip أو composer.zip)
+# فك ضغط أي ملف مضغوط موجود في الجذر تلقائياً
 RUN if [ -f .zip ]; then \
         unzip -o -q .zip -d /var/www/html/ && \
         rm .zip; \
@@ -56,8 +56,8 @@ RUN php artisan key:generate --force \
     && php artisan view:clear \
     && php artisan route:clear
 
-# إنشاء مجلدات التخزين وإعطاء الصلاحيات الكاملة
-RUN mkdir -p storage bootstrap/cache public \
+# إنشاء مجلدات التخزين والجلسات بالكامل وإعطاء الصلاحيات المطلقة لمنع خطأ 419
+RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache public \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 777 storage bootstrap/cache \
     && a2enmod rewrite
