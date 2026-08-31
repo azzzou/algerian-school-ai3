@@ -1,6 +1,7 @@
+
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة وأداة فك الضغط unzip
+# تثبيت الحزم المطلوبة وأدوات فك الضغط
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -22,26 +23,24 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ ملفات المشروع بالكامل (بما فيها الملف المضغوط الموجود في غيتهاب)
+# نسخ ملفات المشروع بالكامل
 COPY . /var/www/html/
 
-# السحر هنا: إذا وجدنا أي ملف zip في المجلد، سنقوم بفك ضخمه تلقائياً وترتيب الملفات
-RUN if ls *.zip 1> /dev/null 2>&1; then \
-        unzip -q *.zip -d temp_extracted && \
-        cp -r temp_extracted/* . && \
-        rm -rf temp_extracted *.zip; \
+# فك ضغط أي ملف zip موجود تلقائياً في الجذر
+RUN if ls *.zip >/dev/null 2>&1; then \
+        unzip -o '*.zip' -d /var/www/html/; \
     fi
 
 # إنشاء المجلدات الضرورية وإعطاؤها الصلاحيات الكاملة
 RUN mkdir -p storage bootstrap/cache public \
-    && chmod -R 777 storage bootstrap/cache
+    && chmod -R 777 storage bootstrap/cache /var/www/html
 
 # تفعيل الـ rewrite
 RUN a2enmod rewrite
 
-# توجيه مسار الأباتشي إلى مجلد public بشكل نهائي
+# توجيه مسار الأباتشي إلى مجلد public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN sed -ri -e 's!/var/www!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 EXPOSE 80
