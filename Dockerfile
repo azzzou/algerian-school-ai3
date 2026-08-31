@@ -1,5 +1,3 @@
-
-
 FROM php:8.2-apache
 
 # تثبيت الحزم المطلوبة وأداة فك الضغط ونظام Git
@@ -27,10 +25,10 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط ملف azzou.zip تلقائياً
-RUN if [ -f azzou.zip ]; then \
-        unzip -o -q azzou.zip -d /var/www/html/ && \
-        rm azzou.zip; \
+# فك ضغط ملف azzou1.zip تلقائياً
+RUN if [ -f azzou1.zip ]; then \
+        unzip -o -q azzou1.zip -d /var/www/html/ && \
+        rm azzou1.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
@@ -53,7 +51,7 @@ RUN php artisan key:generate --force \
     && php artisan view:clear \
     && php artisan route:clear
 
-# إنشاء مجلدات التخزين والجلسات وإعطاء الصلاحيات المطلقة لمنع خطأ 419
+# إنشاء مجلدات التخزين وإعطاء الصلاحيات المطلقة
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache public \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 777 storage bootstrap/cache \
