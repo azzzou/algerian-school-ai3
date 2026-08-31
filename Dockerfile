@@ -1,8 +1,7 @@
 
-
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة، أداة فك الضغط، Git و Node.js (لتجميع التصميمات إن وجدت)
+# تثبيت الحزم المطلوبة، أداة فك الضغط، Git و Node.js
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -47,9 +46,9 @@ RUN if [ ! -f .env ]; then \
 # تثبيت حزم لارافيل عبر Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# تثبيت وبناء حزم الواجهة (Vite/Node) إن وجدت لتظهر التنسيقات والألوان
+# تثبيت حزم Node بشكل آمن يتجاوز مشاكل الصلاحيات الظاهرة في اللوغات
 RUN if [ -f package.json ]; then \
-        npm install && npm run build; \
+        npm install --unsafe-perm && npm run build; \
     fi
 
 # توليد المفتاح، ربط التخزين، وتنظيف الكاش بالكامل
