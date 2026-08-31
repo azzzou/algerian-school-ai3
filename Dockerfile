@@ -1,6 +1,7 @@
+
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة وأداة فك الضغط
+# تثبيت الحزم المطلوبة وأداة فك الضغط ونظام Git
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -25,20 +26,23 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط مشروعك الحقيقي وحذف ملف index.php التجريبي القديم
+# فك ضغط المشروع الحقيقي
 RUN if [ -f composer.zip ]; then \
         unzip -o -q composer.zip -d /var/www/html/ && \
         rm composer.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
-# إنشاء مجلدات التخزين وإعطاء الصلاحيات
+# تثبيت حزم لارافيل تلقائياً عبر Composer داخل السيرفر
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# إنشاء مجلدات التخزين وإعطاء الصلاحيات الكاملة
 RUN mkdir -p storage bootstrap/cache public \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 777 storage bootstrap/cache \
     && a2enmod rewrite
 
-# توجيه الأباتشي إلى مجلد public الخاص بلارافيل
+# توجيه الأباتشي إلى مجلد public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
