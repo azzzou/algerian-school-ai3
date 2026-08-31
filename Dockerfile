@@ -27,18 +27,15 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط المشروع
-RUN if [ -f composer.zip ]; then \
+# فك ضغط أي ملف مضغوط موجود في الجذر تلقائياً (سواء كان .zip أو composer.zip)
+RUN if [ -f .zip ]; then \
+        unzip -o -q .zip -d /var/www/html/ && \
+        rm .zip; \
+    elif [ -f composer.zip ]; then \
         unzip -o -q composer.zip -d /var/www/html/ && \
         rm composer.zip; \
     fi \
     && rm -f /var/www/html/index.php
-
-# إذا كان المشروع داخل مجلد فرعي (مثل school_dashboard)، نقل محتوياته إلى الجذر الرئيسي تلقائياً
-RUN if [ -d "/var/www/html/school_dashboard" ]; then \
-        cp -r /var/www/html/school_dashboard/* /var/www/html/ && \
-        rm -rf /var/www/html/school_dashboard; \
-    fi
 
 # التأكد من وجود ملف .env وإنشاؤه تلقائياً
 RUN if [ ! -f .env ]; then \
