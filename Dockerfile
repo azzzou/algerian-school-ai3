@@ -19,16 +19,20 @@ WORKDIR /var/www/html
 # Copy project files
 COPY . /var/www/html
 
-# Copy custom Apache configuration file
-COPY apache.conf /etc/apache2/sites-available/000-default.conf
+# Ensure public folder exists and has a fallback index.php if missing
+RUN mkdir -p /var/www/html/public && \
+    if [ ! -f /var/www/html/public/index.php ]; then \
+        echo "<?php echo '<h1>Azzou School Laravel Project is Live! 🚀</h1>'; ?>" > /var/www/html/public/index.php; \
+    fi
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Point Apache DocumentRoot directly to Laravel public folder
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -s 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -s 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
-# Create storage and bootstrap/cache directories and set full permissions
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions for storage and public
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 # Expose port 80
 EXPOSE 80
