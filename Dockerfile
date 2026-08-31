@@ -26,15 +26,20 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط المشروع الحقيقي
+# فك ضغط المشروع الحقيقي وتفادي مشاكل الاستبدال
 RUN if [ -f composer.zip ]; then \
         unzip -o -q composer.zip -d /var/www/html/ && \
         rm composer.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
-# تثبيت حزم لارافيل تلقائياً عبر Composer داخل السيرفر
+# تثبيت حزم لارافيل تلقائياً عبر Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# تنظيف وتحديث كاش لارافيل لضمان ظهور التنسيقات والصفحات
+RUN php artisan config:clear \
+    && php artisan cache:clear \
+    && php artisan view:clear
 
 # إنشاء مجلدات التخزين وإعطاء الصلاحيات الكاملة
 RUN mkdir -p storage bootstrap/cache public \
@@ -42,7 +47,7 @@ RUN mkdir -p storage bootstrap/cache public \
     && chmod -R 777 storage bootstrap/cache \
     && a2enmod rewrite
 
-# توجيه الأباتشي إلى مجلد public
+# توجيه الأباتشي إلى مجلد public الخاص بلارافيل
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
