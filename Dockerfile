@@ -1,30 +1,37 @@
 FROM php:8.2-apache
 
-# Install essential extensions
+# تثبيت الحزم المطلوبة
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libzip-dev \
     libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    && docker-php-ext-install pdo_mysql zip bcmath gd
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    unzip \
+    git \
+    curl
 
-# Enable Apache Rewrite Module
-RUN a2enmod rewrite
+# مسح الكاش
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set working directory to public folder directly
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -s 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -s 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
+# تثبيت إضافات PHP
+RUN docker-php-ext-install pdo_mysql gd
 
+# جلب Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# تحديد مجلد العمل
 WORKDIR /var/www/html
+
+# نسخ ملفات المشروع
 COPY . /var/www/html
 
-# Create storage and cache directories automatically if they don't exist, then set permissions
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
+# ضبط صلاحيات المجلدات وتفعيل الـ rewrite
+RUN chown -R www-data:www-data /var/www/html \
+    && a2enmod rewrite
+
+# التعديل الأهم: توجيه مسار الأباتشي إلى مجلد public الخاص بلارافيل
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 EXPOSE 80
-CMD ["apache2-foreground"]
