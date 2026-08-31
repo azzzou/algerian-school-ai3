@@ -1,7 +1,6 @@
-
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة
+# تثبيت الحزم المطلوبة وأداة فك الضغط
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -23,14 +22,19 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ الملفات
+# نسخ جميع الملفات (بما فيها composer.zip)
 COPY . /var/www/html/
 
-# إعطاء صلاحيات كاملة لكل الملفات لكي لا يظهر خطأ 403 أبداً
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 777 /var/www/html \
-    && a2enmod rewrite
+# السحر هنا: فك ضغط composer.zip تلقائياً وترتيب الملفات
+RUN if [ -f composer.zip ]; then \
+        unzip -q composer.zip -d /var/www/html/ && \
+        rm composer.zip; \
+    fi
 
-# ملاحظة: أبقينا المسار الافتراضي /var/www/html بدون توجيه معقد لكي لا يحدث أي خطأ في الـ DocumentRoot
+# إنشاء مجلدات التخزين والكاش وإعطاء الصلاحيات الكاملة
+RUN mkdir -p storage bootstrap/cache public \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 storage bootstrap/cache \
+    && a2enmod rewrite
 
 EXPOSE 80
