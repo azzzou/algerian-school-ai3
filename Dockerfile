@@ -19,17 +19,19 @@ RUN docker-php-ext-install pdo_mysql gd
 # جلب Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# تحديد مجلد العمل
+# إنشاء مجلد العمل والتأكد من وجوده
+RUN mkdir -p /var/www/html/public
 WORKDIR /var/www/html
 
 # نسخ ملفات المشروع
-COPY . /var/www/html
+COPY . /var/www/html/
 
-# ضبط صلاحيات المجلدات وتفعيل الـ rewrite
+# ضبط الصلاحيات وتفعيل الـ rewrite
 RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
     && a2enmod rewrite
 
-# التعديل الأهم: توجيه مسار الأباتشي إلى مجلد public الخاص بلارافيل
+# توجيه مسار الأباتشي إلى مجلد public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
