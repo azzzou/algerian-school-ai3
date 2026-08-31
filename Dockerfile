@@ -1,4 +1,5 @@
 
+
 FROM php:8.2-apache
 
 # تثبيت الحزم المطلوبة وأداة فك الضغط ونظام Git
@@ -26,12 +27,18 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط المشروع وتفادي مشاكل الاستبدال
+# فك ضغط المشروع
 RUN if [ -f composer.zip ]; then \
         unzip -o -q composer.zip -d /var/www/html/ && \
         rm composer.zip; \
     fi \
     && rm -f /var/www/html/index.php
+
+# إذا كان المشروع داخل مجلد فرعي (مثل school_dashboard)، نقل محتوياته إلى الجذر الرئيسي تلقائياً
+RUN if [ -d "/var/www/html/school_dashboard" ]; then \
+        cp -r /var/www/html/school_dashboard/* /var/www/html/ && \
+        rm -rf /var/www/html/school_dashboard; \
+    fi
 
 # التأكد من وجود ملف .env وإنشاؤه تلقائياً
 RUN if [ ! -f .env ]; then \
@@ -41,7 +48,7 @@ RUN if [ ! -f .env ]; then \
     && sed -i 's|APP_ENV=.*|APP_ENV=production|g' .env \
     && sed -i 's|APP_DEBUG=.*|APP_DEBUG=true|g' .env
 
-# تثبيت حزم لارافيل عبر Composer فقط
+# تثبيت حزم لارافيل عبر Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # توليد المفتاح، ربط التخزين، وتنظيف الكاش بالكامل
