@@ -23,16 +23,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ جميع الملفات الموجودة في المستودع
+# نسخ الملفات
 COPY . /var/www/html/
 
-# ضبط الصلاحيات وتفعيل الـ rewrite
+# إعطاء صلاحيات كاملة لكل الملفات لكي لا يظهر خطأ 403 أبداً
 RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 /var/www/html \
     && a2enmod rewrite
 
-# توجيه الأباتشي مباشرة إلى مجلد public الخاص بلارافيل
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# ملاحظة: أبقينا المسار الافتراضي /var/www/html بدون توجيه معقد لكي لا يحدث أي خطأ في الـ DocumentRoot
 
 EXPOSE 80
