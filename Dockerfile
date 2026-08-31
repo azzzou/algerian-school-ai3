@@ -2,7 +2,7 @@
 
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة وأداة فك الضغط ونظام Git
+# تثبيت الحزم المطلوبة، أداة فك الضغط، Git و Node.js (لتجميع التصميمات إن وجدت)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -10,7 +10,9 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
-    curl
+    curl \
+    nodejs \
+    npm
 
 # مسح الكاش
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -34,7 +36,7 @@ RUN if [ -f composer.zip ]; then \
     fi \
     && rm -f /var/www/html/index.php
 
-# التأكد من وجود ملف .env وإنشاؤه تلقائياً إذا لم يكن موجوداً
+# التأكد من وجود ملف .env وإنشاؤه تلقائياً
 RUN if [ ! -f .env ]; then \
         cp .env.example .env || echo "APP_NAME=Laravel" > .env; \
     fi \
@@ -45,7 +47,12 @@ RUN if [ ! -f .env ]; then \
 # تثبيت حزم لارافيل عبر Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# توليد المفتاح، ربط التخزين، وتنظيف الكاش بالكامل لضمان ظهور التنسيقات والأيقونات
+# تثبيت وبناء حزم الواجهة (Vite/Node) إن وجدت لتظهر التنسيقات والألوان
+RUN if [ -f package.json ]; then \
+        npm install && npm run build; \
+    fi
+
+# توليد المفتاح، ربط التخزين، وتنظيف الكاش بالكامل
 RUN php artisan key:generate --force \
     && php artisan storage:link --force \
     && php artisan config:clear \
