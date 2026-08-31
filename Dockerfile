@@ -34,7 +34,7 @@ RUN if [ -f composer.zip ]; then \
     fi \
     && rm -f /var/www/html/index.php
 
-# السحر هنا: التأكد من وجود ملف .env وإنشاؤه تلقائياً إذا لم يكن موجوداً بالرابط الصحيح
+# التأكد من وجود ملف .env وإنشاؤه تلقائياً إذا لم يكن موجوداً
 RUN if [ ! -f .env ]; then \
         cp .env.example .env || echo "APP_NAME=Laravel" > .env; \
     fi \
@@ -45,11 +45,13 @@ RUN if [ ! -f .env ]; then \
 # تثبيت حزم لارافيل عبر Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# توليد مفتاح التطبيق وتنظيف الكاش لضمان عمل كل الروابط والأيقونات
+# توليد المفتاح، ربط التخزين، وتنظيف الكاش بالكامل لضمان ظهور التنسيقات والأيقونات
 RUN php artisan key:generate --force \
+    && php artisan storage:link --force \
     && php artisan config:clear \
     && php artisan cache:clear \
-    && php artisan view:clear
+    && php artisan view:clear \
+    && php artisan route:clear
 
 # إنشاء مجلدات التخزين وإعطاء الصلاحيات الكاملة
 RUN mkdir -p storage bootstrap/cache public \
@@ -57,7 +59,7 @@ RUN mkdir -p storage bootstrap/cache public \
     && chmod -R 777 storage bootstrap/cache \
     && a2enmod rewrite
 
-# توجيه الأباتشي إلى مجلد public
+# توجيه الأباتشي إلى مجلد public الخاص بلارافيل
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
