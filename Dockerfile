@@ -19,12 +19,14 @@ RUN docker-php-ext-install pdo_mysql gd
 # جلب Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# إنشاء مجلد العمل والتأكد من وجوده
-RUN mkdir -p /var/www/html/public
+# تحديد مجلد العمل
 WORKDIR /var/www/html
 
 # نسخ ملفات المشروع
 COPY . /var/www/html/
+
+# إنشاء المجلدات الأساسية لكي لا يحدث أي خطأ أبداً
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 # ضبط الصلاحيات وتفعيل الـ rewrite
 RUN chown -R www-data:www-data /var/www/html \
