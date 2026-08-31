@@ -19,10 +19,17 @@ WORKDIR /var/www/html
 # Copy project files
 COPY . /var/www/html
 
-# Change Apache document root to public folder
+# Configure Apache DocumentRoot and Directory permissions
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -s 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -s 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
+
+# Add Directory permissions to Apache config to fix 403 Forbidden
+RUN echo '<Directory /var/www/html/public/> \n\
+    Options Indexes FollowSymLinks \n\
+    AllowOverride All \n\
+    Require all granted \n\
+</Directory>' >> /etc/apache2/apache2.conf
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
