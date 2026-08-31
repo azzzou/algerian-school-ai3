@@ -22,19 +22,25 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ جميع الملفات
+# نسخ الملفات
 COPY . /var/www/html/
 
-# السحر هنا: -o لفك الضغط والموافقة التلقائية على الاستبدال
+# فك ضغط مشروعك الحقيقي وحذف ملف index.php التجريبي القديم
 RUN if [ -f composer.zip ]; then \
         unzip -o -q composer.zip -d /var/www/html/ && \
         rm composer.zip; \
-    fi
+    fi \
+    && rm -f /var/www/html/index.php
 
-# إنشاء مجلدات التخزين والكاش وإعطاء الصلاحيات الكاملة
+# إنشاء مجلدات التخزين وإعطاء الصلاحيات
 RUN mkdir -p storage bootstrap/cache public \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 777 storage bootstrap/cache \
     && a2enmod rewrite
+
+# توجيه الأباتشي إلى مجلد public الخاص بلارافيل
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 EXPOSE 80
