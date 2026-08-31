@@ -1,7 +1,7 @@
 
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة، أداة فك الضغط، Git و Node.js
+# تثبيت الحزم المطلوبة وأداة فك الضغط ونظام Git
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -9,9 +9,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
-    curl \
-    nodejs \
-    npm
+    curl
 
 # مسح الكاش
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -43,13 +41,8 @@ RUN if [ ! -f .env ]; then \
     && sed -i 's|APP_ENV=.*|APP_ENV=production|g' .env \
     && sed -i 's|APP_DEBUG=.*|APP_DEBUG=true|g' .env
 
-# تثبيت حزم لارافيل عبر Composer
+# تثبيت حزم لارافيل عبر Composer فقط
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# تثبيت حزم Node بشكل آمن يتجاوز مشاكل الصلاحيات الظاهرة في اللوغات
-RUN if [ -f package.json ]; then \
-        npm install --unsafe-perm && npm run build; \
-    fi
 
 # توليد المفتاح، ربط التخزين، وتنظيف الكاش بالكامل
 RUN php artisan key:generate --force \
