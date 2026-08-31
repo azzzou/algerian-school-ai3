@@ -21,9 +21,10 @@ RUN sed -ri -s 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 WORKDIR /var/www/html
 COPY . /var/www/html
 
-# Set permissions for storage and cache
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Create storage and cache directories automatically if they don't exist, then set permissions
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 EXPOSE 80
 CMD ["apache2-foreground"]
