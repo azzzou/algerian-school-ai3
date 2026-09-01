@@ -26,26 +26,31 @@ WORKDIR /var/www/html
 # نسخ الملفات إلى الحاوية
 COPY . /var/www/html/
 
-# فك ضغط ملف azzou3.zip تلقائياً (مع التعامل مع احتمال وجوده في الجذر أو داخل مجلد)
+# فك ضغط ملف azzou3.zip تلقائياً
 RUN if [ -f azzou3.zip ]; then \
         unzip -o -q azzou3.zip -d /var/www/html/ && \
         rm azzou3.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
-# التحقق مما إذا كانت الملفات فُكّت داخل مجلد فرعي (مثل school_dashboard) ونقلها للجذر لتفادي مشاكل المسارات
+# إذا فُك الضغط داخل مجلد فرعي، نقله إلى الجذر لتفادي مشاكل المسارات
 RUN if [ -d /var/www/html/school_dashboard ]; then \
         cp -r /var/www/html/school_dashboard/* /var/www/html/ && \
         rm -rf /var/www/html/school_dashboard; \
     fi
 
-# التأكد من وجود ملف .env وضبط إعدادات البيئة
-RUN if [ ! -f .env ]; then \
-        cp .env.example .env || echo "APP_NAME=Laravel" > .env; \
-    fi \
-    && sed -i 's|APP_URL=.*|APP_URL=https://algerian-school-ai3-2.onrender.com|g' .env \
-    && sed -i 's|APP_ENV=.*|APP_ENV=production|g' \
-    && sed -i 's|APP_DEBUG=.*|APP_DEBUG=false|g' .env
+# إنشاء ملف .env جاهز للإنتاج فوراً وبدون تعقيد
+RUN echo "APP_NAME=Laravel" > .env \
+    && echo "APP_ENV=production" >> .env \
+    && echo "APP_DEBUG=false" >> .env \
+    && echo "APP_URL=https://algerian-school-ai3-2.onrender.com" >> .env \
+    && echo "LOG_CHANNEL=stack" >> .env \
+    && echo "LOG_DEPRECATIONS_CHANNEL=null" >> .env \
+    && echo "LOG_LEVEL=debug" >> .env \
+    && echo "DB_CONNECTION=sqlite" >> .env \
+    && echo "DB_DATABASE=/var/www/html/database/database.sqlite" >> .env \
+    && echo "SESSION_DRIVER=cookie" >> .env \
+    && echo "SESSION_LIFETIME=120" >> .env
 
 # تثبيت حزم لارافيل عبر Composer بدون ملفات التطوير
 RUN composer install --no-dev --optimize-autoloader --no-interaction
@@ -59,9 +64,10 @@ RUN php artisan key:generate --force \
     && php artisan route:clear
 
 # إنشاء مجلدات التخزين وإعطاء الصلاحيات المطلقة
-RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache public \
+RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache public database \
+    && touch database/database.sqlite \
     && chown -R www-data:www-data /var/www/html \
-    && chmod -R 777 storage bootstrap/cache \
+    && chmod -R 777 storage bootstrap/cache database \
     && a2enmod rewrite
 
 # توجيه الأباتشي إلى مجلد public الخاص بلارافيل
