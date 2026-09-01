@@ -1,3 +1,4 @@
+
 FROM php:8.2-apache
 
 # تثبيت الحزم المطلوبة وأداة فك الضغط ونظام Git
@@ -25,10 +26,10 @@ WORKDIR /var/www/html
 # نسخ الملفات
 COPY . /var/www/html/
 
-# فك ضغط ملف azzou2.zip تلقائياً
-RUN if [ -f azzou2.zip ]; then \
-        unzip -o -q azzou2.zip -d /var/www/html/ && \
-        rm azzou2.zip; \
+# فك ضغط ملف azzou3.zip تلقائياً
+RUN if [ -f azzou3.zip ]; then \
+        unzip -o -q azzou3.zip -d /var/www/html/ && \
+        rm azzou3.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
@@ -38,12 +39,12 @@ RUN if [ ! -f .env ]; then \
     fi \
     && sed -i 's|APP_URL=.*|APP_URL=https://algerian-school-ai3-2.onrender.com|g' .env \
     && sed -i 's|APP_ENV=.*|APP_ENV=production|g' .env \
-    && sed -i 's|APP_DEBUG=.*|APP_DEBUG=true|g' .env
+    && sed -i 's|APP_DEBUG=.*|APP_DEBUG=false|g' .env
 
-# تثبيت حزم لارافيل عبر Composer
+# تثبيت حزم لارافيل عبر Composer بدون ملفات التطوير
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# توليد المفتاح، ربط التخزين، وتنظيف الكاش بالكامل
+# توليد المفتاح، ربط التخزين، وتنظيف الكاش بالكامل أثناء البناء
 RUN php artisan key:generate --force \
     && php artisan storage:link --force \
     && php artisan config:clear \
@@ -63,3 +64,6 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 EXPOSE 80
+
+# تشغيل الـ Migrations تلقائياً عند بدء إقلاع الحاوية ثم تشغيل الأباتشي
+CMD ["sh", "-c", "php artisan migrate --force && apache2-foreground"]
