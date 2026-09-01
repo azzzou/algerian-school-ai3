@@ -23,22 +23,28 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ الملفات
+# نسخ الملفات إلى الحاوية
 COPY . /var/www/html/
 
-# فك ضغط ملف azzou3.zip تلقائياً
+# فك ضغط ملف azzou3.zip تلقائياً (مع التعامل مع احتمال وجوده في الجذر أو داخل مجلد)
 RUN if [ -f azzou3.zip ]; then \
         unzip -o -q azzou3.zip -d /var/www/html/ && \
         rm azzou3.zip; \
     fi \
     && rm -f /var/www/html/index.php
 
+# التحقق مما إذا كانت الملفات فُكّت داخل مجلد فرعي (مثل school_dashboard) ونقلها للجذر لتفادي مشاكل المسارات
+RUN if [ -d /var/www/html/school_dashboard ]; then \
+        cp -r /var/www/html/school_dashboard/* /var/www/html/ && \
+        rm -rf /var/www/html/school_dashboard; \
+    fi
+
 # التأكد من وجود ملف .env وضبط إعدادات البيئة
 RUN if [ ! -f .env ]; then \
         cp .env.example .env || echo "APP_NAME=Laravel" > .env; \
     fi \
     && sed -i 's|APP_URL=.*|APP_URL=https://algerian-school-ai3-2.onrender.com|g' .env \
-    && sed -i 's|APP_ENV=.*|APP_ENV=production|g' .env \
+    && sed -i 's|APP_ENV=.*|APP_ENV=production|g' \
     && sed -i 's|APP_DEBUG=.*|APP_DEBUG=false|g' .env
 
 # تثبيت حزم لارافيل عبر Composer بدون ملفات التطوير
