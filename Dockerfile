@@ -1,7 +1,8 @@
 
+
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة وأداة فك الضغط ونظام Git
+# تثبيت الحزم المطلوبة ونظام Git
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -23,21 +24,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ الملفات إلى الحاوية
+# نسخ كافة ملفات المشروع مباشرة من المستودع
 COPY . /var/www/html/
-
-# فك ضغط ملف azzou3.zip تلقائياً
-RUN if [ -f azzou3.zip ]; then \
-        unzip -o -q azzou3.zip -d /var/www/html/ && \
-        rm azzou3.zip; \
-    fi \
-    && rm -f /var/www/html/index.php
-
-# إذا فُك الضغط داخل مجلد فرعي، نقله إلى الجذر لتفادي مشاكل المسارات
-RUN if [ -d /var/www/html/school_dashboard ]; then \
-        cp -r /var/www/html/school_dashboard/* /var/www/html/ && \
-        rm -rf /var/www/html/school_dashboard; \
-    fi
 
 # إنشاء ملف .env جاهز للإنتاج فوراً وبدون تعقيد
 RUN echo "APP_NAME=Laravel" > .env \
